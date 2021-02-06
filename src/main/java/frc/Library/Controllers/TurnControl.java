@@ -1,11 +1,11 @@
-package frc.libraries.Controllers;
+package frc.Library.Controllers;
 
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.SPI;
-import frc.libraries.Util.*;
+import frc.Library.Util.*;
 
 public class TurnControl //implements PIDOutput
 {
