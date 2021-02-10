@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -15,6 +19,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.Library.Autonomous.BallVisionCamera;
 import frc.Library.Chassis.TankDrive;
 import frc.Library.Controllers.Drive;
 import frc.Library.Controllers.PneumaticsControl;
@@ -63,9 +68,28 @@ public class Robot extends TimedRobot
 
   Shooter shooter = new Shooter(modTalon1, modTalon2);
 
+  BallVisionCamera ballTracker;
+  final String networkTableName = "4361-RoxburySwerve2021-Robot";
+  final String cameraName = "RoxSwerveCam2021-4361";
+  //Timer testTimer;
+  //TimerTask taskTimer;
   @Override
   public void robotInit()
   {
+    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.9144, 0);
+    
+  //   taskTimer = new TimerTask(){
+
+  //     @Override
+  //     public void run() {
+  //       // TODO Auto-generated method stub
+  //       HashMap<String, Double> dataMap = new HashMap<String, Double>();
+
+  //       dataMap = ballTracker.getTargetGoal();
+  //       System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is" + dataMap.get("Distance"));
+  //     }
+      
+  //   };
     
   }
 
@@ -207,4 +231,19 @@ public class Robot extends TimedRobot
 		}
 		
   }
+
+
+
+  public void autonomousInit() {
+    //testTimer.schedule(taskTimer, 0, 3000);
+  }
+
+  public void autonomousPeriodic() {
+    HashMap<String, Double> dataMap = new HashMap<String, Double>();
+
+
+    dataMap = ballTracker.getTargetGoal();
+    System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is" + dataMap.get("Distance"));
+  }
+
 }
