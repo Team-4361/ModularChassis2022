@@ -8,12 +8,11 @@
 package frc.robot;
 
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -68,13 +67,17 @@ public class Robot extends TimedRobot {
   BallVisionCamera ballTracker;
   final String networkTableName = "4361-RoxburySwerve2021-Robot";
   final String cameraName = "RoxSwerveCam2021-4361";
-  Timer testTimer;
-  TimerTask taskTimer;
+
+  HashMap<String, Double> dataMap;
+
+  Timer camTimer;
 
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.9144, 0);
 
+    camTimer = new Timer();
+    dataMap = new HashMap<String, Double>();
     // taskTimer = new TimerTask(){
 
     // @Override
@@ -200,22 +203,19 @@ public class Robot extends TimedRobot {
   }
 
   public void autonomousInit() {
-    // testTimer.schedule(taskTimer, 0, 3000);
+    camTimer.start();
 
   }
 
   public void autonomousPeriodic() {
-    HashMap<String, Double> dataMap = new HashMap<String, Double>();
-
-    dataMap = ballTracker.getTargetGoal();
-    System.out
-        .println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    
+    if(camTimer.hasElapsed(5))
+    {
+      dataMap = ballTracker.getTargetGoal();
+      System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     }
+      
   }
-
 }
+
+
