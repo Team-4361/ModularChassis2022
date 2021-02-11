@@ -12,7 +12,6 @@ import java.util.HashMap;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -70,13 +69,10 @@ public class Robot extends TimedRobot {
 
   HashMap<String, Double> dataMap;
 
-  Timer camTimer;
-
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.9144, 0);
 
-    camTimer = new Timer();
     dataMap = new HashMap<String, Double>();
     // taskTimer = new TimerTask(){
 
@@ -203,18 +199,16 @@ public class Robot extends TimedRobot {
   }
 
   public void autonomousInit() {
-    camTimer.start();
 
   }
 
   public void autonomousPeriodic() {
     
-    if(camTimer.hasElapsed(5))
+    if(ballTracker.hasTargets())
     {
       dataMap = ballTracker.getTargetGoal();
       System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     }
-      
   }
 }
 

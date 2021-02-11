@@ -72,6 +72,11 @@ public class BallVisionCamera {
         return PhotonUtils.calculateDistanceToTargetMeters(cameraHeight, BALLHEIGHT, cameraPitch, Math.toRadians(target.getPitch()));
     }
 
+    public Boolean hasTargets()
+    {
+        return photonCamera.hasTargets();
+    }
+
     // Returns the yaw--rotation around the vertical axis--in degrees
     // 0 Yaw means the target is exactly in the middle of the screen
     // Negative yaw means the target is somewhere on the left of the screen
