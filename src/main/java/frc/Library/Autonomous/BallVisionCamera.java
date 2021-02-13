@@ -38,14 +38,16 @@ public class BallVisionCamera {
         //camera pitch in radians
         cameraPitch = mCameraPitch;
 
-        inst = NetworkTableInstance.create();
+        // inst = NetworkTableInstance.getDefault();
 
-        inst.startClient(networkTableHostName);
-        rootTable = inst.getTable("/photonvision/"+cameraName);
+        // inst.startClient(networkTableHostName);
+        // rootTable = inst.getTable("/photonvision/"+cameraName);
     
-        photonCamera = new PhotonCamera(rootTable);  
+        photonCamera = new PhotonCamera(cameraName/*rootTable*/);  
 
         photonCamera.setPipelineIndex(0);
+        
+        System.out.println("Connected");
     }
 
     //Creates an image of the input video of the pipeline

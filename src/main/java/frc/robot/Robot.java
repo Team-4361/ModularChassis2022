@@ -64,8 +64,8 @@ public class Robot extends TimedRobot {
   Shooter shooter = new Shooter(modTalon1, modTalon2);
 
   BallVisionCamera ballTracker;
-  final String networkTableName = "4361-RoxburySwerve2021-Robot";
-  final String cameraName = "RoxSwerveCam2021-4361";
+  final String networkTableName = "photonvision";
+  final String cameraName = "RoxCam2021-4361";
 
   HashMap<String, Double> dataMap;
 
@@ -207,6 +207,7 @@ public class Robot extends TimedRobot {
     if(ballTracker.hasTargets())
     {
       dataMap = ballTracker.getTargetGoal();
+
       System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     }
   }
