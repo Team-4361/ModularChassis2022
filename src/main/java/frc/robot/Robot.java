@@ -98,6 +98,7 @@ public class Robot extends TimedRobot {
      */
 
     if (mode == 1) {
+      
       theTank.drive(-lStick.getY(), rStick.getY());
 
       // FRISBEE SHOOTER MODE
@@ -202,14 +203,29 @@ public class Robot extends TimedRobot {
 
   }
 
+  //Ticks per revolution
+  //5330RPM Free Speed
+  /*
+    Initially: Find the Yaw and rotate to that point
+                Find the distance and start moving
+                Store the distance
+                ____________________________________ Go a quarter of the way using the distance
+    Second Step: Recaclulate the Yaw of that target or find a closer target and get the yaw
+                  Find the distance and start moving
+                  _______________________________Go a half of the way using the distance calculated from this step 
+                  find out what it would be if had started
+    Third Step: Repeat for half and three quarter until the target is reached
+  */
   public void autonomousPeriodic() {
-    
-    if(ballTracker.hasTargets())
-    {
-      dataMap = ballTracker.getTargetGoal();
 
-      System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
-    }
+    
+    // if(ballTracker.hasTargets())
+    // {
+    //   theTank.drive(-lStick.getY(), rStick.getY());
+    //   dataMap = ballTracker.getTargetGoal();
+
+    //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
+    // }
   }
 }
 
