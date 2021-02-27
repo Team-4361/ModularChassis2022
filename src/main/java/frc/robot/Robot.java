@@ -71,7 +71,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.9144, 0);
+    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.3175, 0);
 
     dataMap = new HashMap<String, Double>();
     // taskTimer = new TimerTask(){
