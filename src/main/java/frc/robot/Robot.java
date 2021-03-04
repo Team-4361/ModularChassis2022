@@ -205,6 +205,8 @@ public class Robot extends TimedRobot {
 
   //Ticks per revolution
   //5330RPM Free Speed
+  //Calculate how far the wheel would go if it rotated once
+  //Use the encoder to find out when it makes one revolution
   /*
     Initially: Find the Yaw and rotate to that point
                 Find the distance and start moving
@@ -226,6 +228,31 @@ public class Robot extends TimedRobot {
 
     //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     // }
+    
+      adjustRobotToBallRotation(ballTracker.getTargetGoal().get("Yaw"));
+  }
+
+  /*
+    yawAwayFromBall is in degrees
+  */
+  public void adjustRobotToBallRotation(double yawAwayFromBall)
+  {
+    while(!(yawAwayFromBall >= -8)  && !(yawAwayFromBall <= 8))
+    {
+      if(yawAwayFromBall < -8)
+      {
+        theTank.Turn(0.2);  
+      }
+    
+      if(yawAwayFromBall > 8)
+      { 
+        theTank.Turn(-0.2);
+      }
+    }
+  }
+  public void adjustRobotToBallPosition()
+  {
+    
   }
 }
 
