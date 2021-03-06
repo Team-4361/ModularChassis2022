@@ -12,6 +12,7 @@ import java.util.HashMap;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -199,8 +200,17 @@ public class Robot extends TimedRobot {
 
   }
 
-  public void autonomousInit() {
+  //The encoder is an E4P encoder
+  Encoder modularEncoder;
+  //E4P does 1000 pulses per rotation
+  double distanceToTarget;
 
+  public void autonomousInit() {
+    modularEncoder = new Encoder(0, 1);
+
+    //Distance per pulse is in meters
+    modularEncoder.setDistancePerPulse(0.2032D/1000D);
+    distanceToTarget = ballTracker.getTargetGoal().get("Distance");
   }
 
   //Ticks per revolution
@@ -218,6 +228,8 @@ public class Robot extends TimedRobot {
                   find out what it would be if had started
     Third Step: Repeat for half and three quarter until the target is reached
   */
+
+  
   public void autonomousPeriodic() {
 
     
@@ -228,8 +240,15 @@ public class Robot extends TimedRobot {
 
     //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     // }
-    
-      adjustRobotToBallRotation(ballTracker.getTargetGoal().get("Yaw"));
+      if(modularEncoder.getDistance() < distanceToTarget)
+      {
+        theTank.drive(-0.8, 0.8);
+      }
+      else
+      {
+        theTank.drive(0, 0);
+      }
+      
   }
 
   /*
