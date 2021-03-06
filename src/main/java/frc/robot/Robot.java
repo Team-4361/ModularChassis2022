@@ -256,18 +256,18 @@ public class Robot extends TimedRobot {
   */
   public void adjustRobotToBallRotation(double yawAwayFromBall)
   {
-    while(!(yawAwayFromBall >= -8)  && !(yawAwayFromBall <= 8))
-    {
+    // while(!(yawAwayFromBall >= -8)  && !(yawAwayFromBall <= 8))
+    // {
       if(yawAwayFromBall < -8)
       {
-        theTank.Turn(0.2);  
+        theTank.drive(-0.7, -0.7);  
       }
     
       if(yawAwayFromBall > 8)
       { 
-        theTank.Turn(-0.2);
+        theTank.drive(0.7, 0.7);
       }
-    }
+    //}
   }
   public void adjustRobotToBallPosition()
   {
