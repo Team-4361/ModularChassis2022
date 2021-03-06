@@ -70,11 +70,22 @@ public class Robot extends TimedRobot {
 
   HashMap<String, Double> dataMap;
 
+  //The encoder is an E4P encoder
+  Encoder modularEncoder;
+  //E4P does 1000 pulses per rotation
+  double distanceToTarget;
+
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.3175, 0);
 
     dataMap = new HashMap<String, Double>();
+
+    modularEncoder = new Encoder(0, 1);
+
+    //Distance per pulse is in meters
+    modularEncoder.setDistancePerPulse(0.2032D/1000D);
+    
     // taskTimer = new TimerTask(){
 
     // @Override
@@ -101,7 +112,8 @@ public class Robot extends TimedRobot {
     if (mode == 1) {
       
       theTank.drive(-lStick.getY(), rStick.getY());
-
+      
+      System.out.println(modularEncoder.getDistance()); 
       // FRISBEE SHOOTER MODE
       if (xCont.getXButtonReleased()) {
         System.out.println("pffffft 0");
@@ -200,16 +212,9 @@ public class Robot extends TimedRobot {
 
   }
 
-  //The encoder is an E4P encoder
-  Encoder modularEncoder;
-  //E4P does 1000 pulses per rotation
-  double distanceToTarget;
+
 
   public void autonomousInit() {
-    modularEncoder = new Encoder(0, 1);
-
-    //Distance per pulse is in meters
-    modularEncoder.setDistancePerPulse(0.2032D/1000D);
     distanceToTarget = ballTracker.getTargetGoal().get("Distance");
   }
 
@@ -240,9 +245,10 @@ public class Robot extends TimedRobot {
 
     //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     // }
-      if(modularEncoder.getDistance() < distanceToTarget)
+      if(modularEncoder.getDistance() < 2)
       {
-        theTank.drive(-0.8, 0.8);
+        theTank.drive(0.3, -0.3);
+        
       }
       else
       {
