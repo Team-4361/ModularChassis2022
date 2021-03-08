@@ -84,7 +84,7 @@ public class Robot extends TimedRobot {
     modularEncoder = new Encoder(0, 1);
 
     //Distance per pulse is in meters
-    modularEncoder.setDistancePerPulse(0.2032D/1000D);
+    modularEncoder.setDistancePerPulse(0.2032D/1000D); //try 250 and 500 for the pulse per rotation || Try 0.638371596 for the distance per rotation
     
     // taskTimer = new TimerTask(){
 
