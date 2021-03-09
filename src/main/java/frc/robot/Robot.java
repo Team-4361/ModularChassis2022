@@ -74,6 +74,7 @@ public class Robot extends TimedRobot {
   Encoder modularEncoder;
   //E4P does 1000 pulses per rotation
   double distanceToTarget;
+  double degreeToTarget;
 
   @Override
   public void robotInit() {
@@ -82,9 +83,9 @@ public class Robot extends TimedRobot {
     dataMap = new HashMap<String, Double>();
 
     modularEncoder = new Encoder(0, 1);
-
+    modularEncoder.reset();
     //Distance per pulse is in meters
-    modularEncoder.setDistancePerPulse(0.2032D/1000D); //try 250 and 500 for the pulse per rotation || Try 0.638371596 for the distance per rotation
+    modularEncoder.setDistancePerPulse(0.63837/250.0); //try 250 and 500 for the pulse per rotation || Try 0.638371596 for the distance per rotation
     
     // taskTimer = new TimerTask(){
 
@@ -112,8 +113,8 @@ public class Robot extends TimedRobot {
     if (mode == 1) {
       
       theTank.drive(-lStick.getY(), rStick.getY());
+       
       
-      System.out.println(modularEncoder.getDistance()); 
       // FRISBEE SHOOTER MODE
       if (xCont.getXButtonReleased()) {
         System.out.println("pffffft 0");
@@ -195,6 +196,8 @@ public class Robot extends TimedRobot {
 
     }
 
+    System.out.println(modularEncoder.getDistance());
+
     // Smartdashboard Values
 
     try {
@@ -215,7 +218,11 @@ public class Robot extends TimedRobot {
 
 
   public void autonomousInit() {
-    distanceToTarget = ballTracker.getTargetGoal().get("Distance");
+    HashMap<String, Double> info = ballTracker.getTargetGoal();
+    distanceToTarget = info.get("Distance");
+    degreeToTarget = info.get("Yaw");
+    modularEncoder.reset();
+  
   }
 
   //Ticks per revolution
@@ -234,7 +241,7 @@ public class Robot extends TimedRobot {
     Third Step: Repeat for half and three quarter until the target is reached
   */
 
-  
+  //0.00833333 repeating per degree
   public void autonomousPeriodic() {
 
     
@@ -245,14 +252,20 @@ public class Robot extends TimedRobot {
 
     //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
     // }
-      if(modularEncoder.getDistance() < 2)
+      System.out.println(modularEncoder.getDistance());
+      if(modularEncoder.getDistance() > -degreeToTarget*0.008333333D)
       {
-        theTank.drive(0.3, -0.3);
-        
+        theTank.drive(-0.7, -0.7);
       }
+      // if(modularEncoder.getDistance() < distanceToTarget-0.4572)
+      // {
+      //   theTank.drive(0.3, -0.3);
+        
+      // }
       else
       {
         theTank.drive(0, 0);
+        //modularEncoder.reset();
       }
       
   }
