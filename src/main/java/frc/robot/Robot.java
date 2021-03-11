@@ -244,24 +244,20 @@ public class Robot extends TimedRobot {
   //0.00833333 repeating per degree
   public void autonomousPeriodic() {
 
-    
-    // if(ballTracker.hasTargets())
-    // {
-    //   theTank.drive(-lStick.getY(), rStick.getY());
-    //   dataMap = ballTracker.getTargetGoal();
-
-    //   //System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to the ball is " + dataMap.get("Distance"));
-    // }
       System.out.println(modularEncoder.getDistance());
-      if(modularEncoder.getDistance() > -degreeToTarget*0.008333333D)
+      if(modularEncoder.getDistance() < -degreeToTarget*0.008333333D)
       {
         theTank.drive(-0.7, -0.7);
       }
-      // if(modularEncoder.getDistance() < distanceToTarget-0.4572)
-      // {
-      //   theTank.drive(0.3, -0.3);
+      if(-modularEncoder.getDistance() < degreeToTarget*0.008333333D)
+      {
+        theTank.drive(0.7, 0.7);
+      }
+      if(modularEncoder.getDistance() < distanceToTarget-0.4572)
+      {
+        theTank.drive(0.3, -0.3);
         
-      // }
+      }
       else
       {
         theTank.drive(0, 0);
