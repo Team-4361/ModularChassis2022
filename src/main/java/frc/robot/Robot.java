@@ -76,6 +76,10 @@ public class Robot extends TimedRobot {
   double distanceToTarget;
   double degreeToTarget;
 
+  Boolean shouldMoveFoward;
+  Boolean continueMoving;
+  int cycleFinished;
+
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.3175, 0);
@@ -215,13 +219,16 @@ public class Robot extends TimedRobot {
 
   }
 
-
+  HashMap<String, Double> info;
 
   public void autonomousInit() {
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
     modularEncoder.reset();
+    shouldMoveFoward = false;
+    continueMoving = true;
+    cycleFinished = 0;
   
   }
 
@@ -242,26 +249,42 @@ public class Robot extends TimedRobot {
   */
 
   //0.00833333 repeating per degree
+  
   public void autonomousPeriodic() {
 
       System.out.println(modularEncoder.getDistance());
-      if(modularEncoder.getDistance() < -degreeToTarget*0.008333333D)
+      if(modularEncoder.getDistance() < -degreeToTarget*0.008333333D && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(-0.7, -0.7);
+        theTank.drive(-0.9, -0.9);
       }
-      if(-modularEncoder.getDistance() < degreeToTarget*0.008333333D)
+      else if(-modularEncoder.getDistance() < degreeToTarget*0.008333333D && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.7, 0.7);
+        theTank.drive(0.9, 0.9);
       }
-      if(modularEncoder.getDistance() < distanceToTarget-0.4572)
+      else if(modularEncoder.getDistance() < distanceToTarget/4 && shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.3, -0.3);
-        
+        theTank.drive(0.4, -0.4);
       }
       else
       {
-        theTank.drive(0, 0);
-        //modularEncoder.reset();
+        if(continueMoving)
+        {
+          //theTank.drive(0, 0);
+          shouldMoveFoward = !shouldMoveFoward;
+          cycleFinished++;
+          modularEncoder.reset();
+          if(cycleFinished%2 == 0)
+          {
+            info = ballTracker.getTargetGoal();
+            distanceToTarget = info.get("Distance");
+            degreeToTarget = info.get("Yaw");
+          }
+
+          if(distanceToTarget < 0.04)
+          {
+            continueMoving =false;
+          }
+        }
       }
       
   }
