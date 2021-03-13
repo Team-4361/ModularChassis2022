@@ -250,18 +250,20 @@ public class Robot extends TimedRobot {
 
   //0.00833333 repeating per degree
   
-  public void autonomousPeriodic() {
+  public void autonomousPeriodic() 
+  {
 
-      System.out.println(modularEncoder.getDistance());
-      if(modularEncoder.getDistance() < -degreeToTarget*0.008333333D && !shouldMoveFoward && continueMoving)
+      //If ball is left of the robot
+      if((modularEncoder.getDistance()-0.10 < -degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
       {
         theTank.drive(-0.9, -0.9);
       }
-      else if(-modularEncoder.getDistance() < degreeToTarget*0.008333333D && !shouldMoveFoward && continueMoving)
+      //If ball is right of the camera
+      else if((-modularEncoder.getDistance()+0.10 < degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
       {
         theTank.drive(0.9, 0.9);
       }
-      else if(modularEncoder.getDistance() < distanceToTarget/4 && shouldMoveFoward && continueMoving)
+      else if((modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
       {
         theTank.drive(0.4, -0.4);
       }
@@ -269,7 +271,7 @@ public class Robot extends TimedRobot {
       {
         if(continueMoving)
         {
-          //theTank.drive(0, 0);
+          theTank.drive(0, 0);
           shouldMoveFoward = !shouldMoveFoward;
           cycleFinished++;
           modularEncoder.reset();
@@ -288,6 +290,7 @@ public class Robot extends TimedRobot {
       }
       
   }
+
 
   /*
     yawAwayFromBall is in degrees
