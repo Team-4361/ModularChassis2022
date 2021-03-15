@@ -259,7 +259,7 @@ public class Robot extends TimedRobot {
         theTank.drive(-0.9, -0.9);
       }
       //If ball is right of the camera
-      else if((-modularEncoder.getDistance()+0.10 < degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
+      else if((-modularEncoder.getDistance()-0.10 < degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
       {
         theTank.drive(0.9, 0.9);
       }
