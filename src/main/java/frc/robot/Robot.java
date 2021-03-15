@@ -16,8 +16,10 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.Library.Autonomous.BallVisionCamera;
 import frc.Library.Chassis.TankDrive;
 import frc.Library.Controllers.Drive;
@@ -220,8 +222,9 @@ public class Robot extends TimedRobot {
   }
 
   HashMap<String, Double> info;
-
+  PIDController modularPIDController;
   public void autonomousInit() {
+    modularPIDController = new PIDController(3.5,0,0);
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
@@ -250,22 +253,37 @@ public class Robot extends TimedRobot {
 
   //0.00833333 repeating per degree
   
+  final double degreeToMeterConst = 0.00833333;
+  double motorPower;
+  double currentDistanceAwayFromTarget;
+
   public void autonomousPeriodic() 
   {
 
       //If ball is left of the robot
-      if((modularEncoder.getDistance()-0.10 < -degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
+      if((modularEncoder.getDistance() < -degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(-0.9, -0.9);
+        //currentDistanceAwayFromTarget = (-degreeToTarget*degreeToMeterConst) - modularEncoder.getDistance();
+        modularPIDController.setP(3.0);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(modularEncoder.getDistance(), 0), -1.0, 1.0);
+        theTank.drive(-motorPower, -motorPower);
+        //theTank.drive(-0.9, -0.9);
       }
       //If ball is right of the camera
-      else if((-modularEncoder.getDistance()+0.10 < degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
+      else if((-modularEncoder.getDistance() < degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.9, 0.9);
+        //currentDistanceAwayFromTarget = (degreeToTarget*degreeToMeterConst) - (-modularEncoder.getDistance());
+        modularPIDController.setP(3.0);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(-modularEncoder.getDistance(), 0), -1.0, 1.0);
+        theTank.drive(motorPower, motorPower);
+        //theTank.drive(0.9, 0.9);
       }
       else if((modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.4, -0.4);
+        modularPIDController.setP(10.0);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(modularEncoder.getDistance(), 0), -1.0, 1.0);
+        theTank.drive(motorPower, -motorPower);
+        //theTank.drive(0.4, -0.4);
       }
       else
       {
