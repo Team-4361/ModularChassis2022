@@ -16,8 +16,10 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.Library.Autonomous.BallVisionCamera;
 import frc.Library.Chassis.TankDrive;
 import frc.Library.Controllers.Drive;
@@ -37,30 +39,42 @@ public class Robot extends TimedRobot {
   // if mode = 2; thor's hammer
   // if mode = 3; romulus.
   // if mode = 4; Xbox tank/arcade drive control (no operator)
-  public static int mode = 1;
+  public static int mode = 3;
   SendableChooser<String> modularMode = new SendableChooser<>();
-  WPI_TalonSRX lDrive1 = new WPI_TalonSRX(1);
-  WPI_TalonSRX lDrive2 = new WPI_TalonSRX(2);
+
+
+  //Define the Talons for the Tank Drive
+  //DR MOTOR 01 = Left Front
+  //DR Motor 02 = Right Front
+  //DR Motor 03 = Left Back
+  //DR Motor 04 = Right Back
+  WPI_TalonSRX lDrive1 = new WPI_TalonSRX(3);
+  WPI_TalonSRX lDrive2 = new WPI_TalonSRX(1);
   WPI_TalonSRX[] lDriveMotors = { lDrive1, lDrive2 };
   Drive lDrive = new Drive(lDriveMotors);
+
   WPI_TalonSRX rDrive1 = new WPI_TalonSRX(4);
-  WPI_TalonSRX rDrive2 = new WPI_TalonSRX(6);
-  WPI_TalonSRX[] rDriveMotors = { rDrive1, rDrive2 };
+  WPI_TalonSRX rDrive2 = new WPI_TalonSRX(2);
+    WPI_TalonSRX[] rDriveMotors = { rDrive1, rDrive2 };
   Drive rDrive = new Drive(rDriveMotors);
   TankDrive theTank = new TankDrive(lDrive, rDrive);
+
+  // Joystick 0 = Left Drive
+  // Joystick 1 = Right Drive
   Joystick lStick = new Joystick(0);
   Joystick rStick = new Joystick(1);
 
   XboxController xCont = new XboxController(2);
   XboxArcade xContArCon = new XboxArcade(2, Hand.kLeft);
   // snowblower motor for frisbee shooter
-  WPI_TalonSRX modTalon1 = new WPI_TalonSRX(3);
+  //WPI_TalonSRX modTalon1 = new WPI_TalonSRX(3);
+  WPI_TalonSRX modTalon1 = new WPI_TalonSRX(8);
   // CIM motor for frisbee shooter
   WPI_TalonSRX modTalon2 = new WPI_TalonSRX(5);
   // modular talon 3
   WPI_TalonSRX modTalon3 = new WPI_TalonSRX(7);
   // modular talon 4
-  WPI_TalonSRX modTalon4 = new WPI_TalonSRX(8);
+  WPI_TalonSRX modTalon4 = new WPI_TalonSRX(6);
 
   Shooter shooter = new Shooter(modTalon1, modTalon2);
 
@@ -167,31 +181,61 @@ public class Robot extends TimedRobot {
       theTank.drive(-lStick.getY(), rStick.getY());
 
       // BALL SHOOTER
-      boolean spinnyThingSpinningQuestionMark = false;
-      boolean indexThingSpinningQuestionMark = false;
-      if (xCont.getAButtonPressed()) {
-        spinnyThingSpinningQuestionMark = !spinnyThingSpinningQuestionMark;
-        if (spinnyThingSpinningQuestionMark) {
-          modTalon3.set(1.0);
-        } else if (!spinnyThingSpinningQuestionMark) {
-          modTalon3.set(0.0);
-        }
+      //boolean spinnyThingSpinningQuestionMark = false;
+      //boolean indexThingSpinningQuestionMark = false;
+      //if (xCont.getAButtonPressed()) {
+      //  spinnyThingSpinningQuestionMark = !spinnyThingSpinningQuestionMark;
+      //  if (spinnyThingSpinningQuestionMark) {
+      //    modTalon3.set(1.0);
+      //  } else if (!spinnyThingSpinningQuestionMark) {
+      //    modTalon3.set(0.0);
+      //  }
+      //}
+
+      //Agitator (spin - Talon 3)
+      if (xCont.getAButtonPressed()){
+        modTalon3.set(-1.0);
+      }else if(xCont.getAButtonReleased()){
+        modTalon3.set(0.0);
       }
 
+      //Indexer and Shooter (Talon 4,2 resp.)
       if (xCont.getBButtonPressed()) {
         modTalon4.set(1.0);
+        modTalon2.set(-1.0);
       } else if (xCont.getBButtonReleased()) {
         modTalon4.set(0.0);
+        modTalon2.set(0.0);
+      }
+      //Shooter (Talon 2)
+      //if (xCont.getYButtonPressed()) {
+        //modTalon2.set(-1.0);
+      //} else if (xCont.getYButtonReleased()) {
+        //modTalon2.set(0.0);
+      //}
+
+      //Intake in (Talon 1)
+      if(xCont.getRawButtonPressed(6)) {
+        modTalon1.set(-1.0);
+      } else if (xCont.getRawButtonReleased(6)) {
+        modTalon1.set(0.0);
+      }
+      
+      //Intake out
+      if(xCont.getRawButtonPressed(5)) {
+        modTalon1.set(1.0);
+      } else if (xCont.getRawButtonReleased(5)) {
+        modTalon1.set(0.0);
       }
 
-      if (xCont.getXButtonPressed()) {
-        indexThingSpinningQuestionMark = !indexThingSpinningQuestionMark;
-        if (indexThingSpinningQuestionMark) {
-          modTalon2.set(1.0);
-        } else if (!indexThingSpinningQuestionMark) {
-          modTalon2.set(0.0);
-        }
-      }
+      //if (xCont.getX`Pressed()) {
+      //  indexThingSpinningQuestionMark = !indexThingSpinningQuestionMark;
+      //  if (indexThingSpinningQuestionMark) {
+      //    modTalon2.set(1.0);
+      //  } else if (!indexThingSpinningQuestionMark) {
+      //   modTalon2.set(0.0);
+      //  }
+      //}
     }
 
     if (mode == 4)// xbox tank/arcade control
@@ -220,8 +264,9 @@ public class Robot extends TimedRobot {
   }
 
   HashMap<String, Double> info;
-
+  PIDController modularPIDController;
   public void autonomousInit() {
+    modularPIDController = new PIDController(3.0,0,0);
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
@@ -229,7 +274,6 @@ public class Robot extends TimedRobot {
     shouldMoveFoward = false;
     continueMoving = true;
     cycleFinished = 0;
-  
   }
 
   //Ticks per revolution
@@ -250,22 +294,38 @@ public class Robot extends TimedRobot {
 
   //0.00833333 repeating per degree
   
+  final double degreeToMeterConst = 0.00833333;
+  double motorPower;
+  double currentDistanceAwayFromTarget;
+
   public void autonomousPeriodic() 
   {
 
       //If ball is left of the robot
-      if((modularEncoder.getDistance()-0.10 < -degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
+      if((modularEncoder.getDistance() < -degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(-0.9, -0.9);
+        currentDistanceAwayFromTarget = (-degreeToTarget*degreeToMeterConst) - modularEncoder.getDistance();
+        modularPIDController.setP(1/0.2);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+        theTank.drive(motorPower, motorPower);
+        //theTank.drive(-0.9, -0.9);
       }
       //If ball is right of the camera
-      else if((-modularEncoder.getDistance()-0.10 < degreeToTarget*0.008333333D) && !shouldMoveFoward && continueMoving)
+      else if((-modularEncoder.getDistance() < degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.9, 0.9);
+        currentDistanceAwayFromTarget = (degreeToTarget*degreeToMeterConst) - (-modularEncoder.getDistance());
+        modularPIDController.setP(1/0.2);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+        theTank.drive(-motorPower, -motorPower);
+        //theTank.drive(0.9, 0.9);
       }
       else if((modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
       {
-        theTank.drive(0.4, -0.4);
+        currentDistanceAwayFromTarget = distanceToTarget - modularEncoder.getDistance();
+        modularPIDController.setP(1/10.0);
+        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+        theTank.drive(motorPower, -motorPower);
+        //theTank.drive(0.4, -0.4);
       }
       else
       {
@@ -288,6 +348,7 @@ public class Robot extends TimedRobot {
           }
         }
       }
+      System.out.println(motorPower);
       
   }
 
