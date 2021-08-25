@@ -308,6 +308,7 @@ public class Robot extends TimedRobot {
         modularPIDController.setP(1/0.2);
         motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
         theTank.drive(motorPower, motorPower);
+        System.out.println("To Left with motor power" + motorPower);
         //theTank.drive(-0.9, -0.9);
       }
       //If ball is right of the camera
@@ -317,6 +318,7 @@ public class Robot extends TimedRobot {
         modularPIDController.setP(1/0.2);
         motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
         theTank.drive(-motorPower, -motorPower);
+        System.out.println("To Right with motor power" + motorPower);
         //theTank.drive(0.9, 0.9);
       }
       else if((modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
@@ -325,12 +327,15 @@ public class Robot extends TimedRobot {
         modularPIDController.setP(1/10.0);
         motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
         theTank.drive(motorPower, -motorPower);
+        System.out.println("Straight with motor power" + motorPower);
         //theTank.drive(0.4, -0.4);
       }
       else
       {
+        System.out.println("else statement running");
         if(continueMoving)
         {
+          System.out.println("Cycle changing");
           theTank.drive(0, 0);
           shouldMoveFoward = !shouldMoveFoward;
           cycleFinished++;
@@ -341,15 +346,14 @@ public class Robot extends TimedRobot {
             distanceToTarget = info.get("Distance");
             degreeToTarget = info.get("Yaw");
           }
-
+          
           if(distanceToTarget < 0.04)
           {
+            System.out.println("Robot stop");
             continueMoving =false;
           }
         }
       }
-      System.out.println(motorPower);
-      
   }
 
 
@@ -358,8 +362,6 @@ public class Robot extends TimedRobot {
   */
   public void adjustRobotToBallRotation(double yawAwayFromBall)
   {
-    // while(!(yawAwayFromBall >= -8)  && !(yawAwayFromBall <= 8))
-    // {
       if(yawAwayFromBall < -8)
       {
         theTank.drive(-0.7, -0.7);  
@@ -369,7 +371,6 @@ public class Robot extends TimedRobot {
       { 
         theTank.drive(0.7, 0.7);
       }
-    //}
   }
   public void adjustRobotToBallPosition()
   {
