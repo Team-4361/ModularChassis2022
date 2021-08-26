@@ -321,13 +321,13 @@ public class Robot extends TimedRobot {
         System.out.println("To Right with motor power" + motorPower);
         //theTank.drive(0.9, 0.9);
       }
-      else if((modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
+      else if((-modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
       {
-        currentDistanceAwayFromTarget = (distanceToTarget) - modularEncoder.getDistance();
-        modularPIDController.setP(0.1);
+        currentDistanceAwayFromTarget = (distanceToTarget/4) + modularEncoder.getDistance();
+        modularPIDController.setP(0.4);
         motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
         theTank.drive(-motorPower, motorPower);
-        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget);
+        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + "Encoder Distance Covered: " + modularEncoder.getDistance());
         //theTank.drive(0.4, -0.4);
       }
       else
@@ -355,4 +355,3 @@ public class Robot extends TimedRobot {
         }
       }
   }
-}
