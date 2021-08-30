@@ -323,7 +323,7 @@ public class Robot extends TimedRobot {
       }
       else if((-modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
       {
-        currentDistanceAwayFromTarget = (distanceToTarget/4) + modularEncoder.getDistance();
+        currentDistanceAwayFromTarget = distanceToTarget + modularEncoder.getDistance();
         modularPIDController.setP(0.4);
         motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
         theTank.drive(-motorPower, motorPower);
@@ -355,3 +355,4 @@ public class Robot extends TimedRobot {
         }
       }
   }
+}
