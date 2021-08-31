@@ -284,15 +284,16 @@ public class Robot extends TimedRobot {
   // Subtract the normal wheel movement from the wheel that is moving faster to find out when to tell the wheel that is moving faster to stop moving faster
   // Remove the resetting thing
   // You might need to slow down the wheel that is going at normal speed (I'll find out when I test it)
+  
+  //Try using the old code and just removing setting the motors to 0.
 
   Boolean hasTurned = false;
   
-
+  //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
   {
-
       //If ball is left of the robot
-      if((leftModularEncoder.getDistance()+0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
+      if(( ((leftModularEncoder.getDistance()+0.04) - rightModularEncoder.getDistance()) < -degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
@@ -304,13 +305,13 @@ public class Robot extends TimedRobot {
         currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
-        //Moving Target
-        theTank.drive(motorPowerToTurn, motorPowerToTurn);
+        //Moving to Target
+        theTank.drive(MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0), motorPower);
         System.out.println("To Left with motor power" + motorPower);
       }
       //If ball is right of the camera
       /*You wil be subtracting between the left encoder and right encoder here*/
-      else if(((-leftModularEncoder.getDistance())+0.04 < degreeToTarget*degreeToMeterConst) && continueMoving)
+      else if(((   ((-rightModularEncoder.getDistance())+0.04) + leftModularEncoder.getDistance()) < degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
@@ -322,8 +323,8 @@ public class Robot extends TimedRobot {
         currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
-        //Moving Target
-        theTank.drive(-motorPowerToTurn, -motorPowerToTurn);
+        //Moving to Target
+        theTank.drive(-motorPower, MathUtil.clamp(-motorPowerToTurn-motopower, -1.0, 1.0));
         System.out.println("To Right with motor power" + motorPower);
       }
       else if((-leftModularEncoder.getDistance() < distanceToTarget/4) && continueMoving)
@@ -341,7 +342,7 @@ public class Robot extends TimedRobot {
         currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
-        //Moving information
+        //Moving to target
         theTank.drive(-motorPower, motorPower);
         System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + "Encoder Distance Covered: " + leftModularEncoder.getDistance());
       }
