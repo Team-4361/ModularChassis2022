@@ -55,7 +55,7 @@ public class Robot extends TimedRobot {
 
   WPI_TalonSRX rDrive1 = new WPI_TalonSRX(4);
   WPI_TalonSRX rDrive2 = new WPI_TalonSRX(2);
-    WPI_TalonSRX[] rDriveMotors = { rDrive1, rDrive2 };
+  WPI_TalonSRX[] rDriveMotors = { rDrive1, rDrive2 };
   Drive rDrive = new Drive(rDriveMotors);
   TankDrive theTank = new TankDrive(lDrive, rDrive);
 
@@ -84,15 +84,19 @@ public class Robot extends TimedRobot {
 
   HashMap<String, Double> dataMap;
 
-  //The encoder is an E4P encoder
-  Encoder modularEncoder;
-  //E4P does 1000 pulses per rotation
+  Encoder leftModularEncoder;
+  Encoder rightModularEncoder;
+
   double distanceToTarget;
   double degreeToTarget;
 
   Boolean shouldMoveFoward;
   Boolean continueMoving;
-  int cycleFinished;
+  final float distancePerPulse = 0.63837f/250.0f;
+
+  HashMap<String, Double> info;
+  PIDController distancePIDController;
+  PIDController rotationPIDController;
 
   @Override
   public void robotInit() {
@@ -100,25 +104,14 @@ public class Robot extends TimedRobot {
 
     dataMap = new HashMap<String, Double>();
 
-    modularEncoder = new Encoder(0, 1);
-    modularEncoder.reset();
+    rightModularEncoder = new Encoder(2,3);
+    leftModularEncoder = new Encoder(0,1);
+    rightModularEncoder.reset();
+    leftModularEncoder.reset();
+
     //Distance per pulse is in meters
-    modularEncoder.setDistancePerPulse(0.63837/250.0); //try 250 and 500 for the pulse per rotation || Try 0.638371596 for the distance per rotation
-    
-    // taskTimer = new TimerTask(){
-
-    // @Override
-    // public void run() {
-    // // TODO Auto-generated method stub
-    // HashMap<String, Double> dataMap = new HashMap<String, Double>();
-
-    // dataMap = ballTracker.getTargetGoal();
-    // System.out.println("The yaw is " + dataMap.get("Yaw") + " and the distance to
-    // the ball is" + dataMap.get("Distance"));
-    // }
-
-    // };
-
+    leftModularEncoder.setDistancePerPulse(distancePerPulse);
+    rightModularEncoder.setDistancePerPulse(distancePerPulse);
   }
 
   @Override
@@ -244,7 +237,7 @@ public class Robot extends TimedRobot {
 
     }
 
-    //System.out.println(modularEncoder.getDistance());
+    //System.out.println(leftModularEncoder.getDistance());
 
     // Smartdashboard Values
 
@@ -263,96 +256,97 @@ public class Robot extends TimedRobot {
 
   }
 
-  HashMap<String, Double> info;
-  PIDController modularPIDController;
   public void autonomousInit() {
-    modularPIDController = new PIDController(3.0,0,0);
+    distancePIDController = new PIDController(0.4,0,0);
+    rotationPIDController = new PIDController(8,0,0);
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
-    modularEncoder.reset();
+    leftModularEncoder.reset();
     shouldMoveFoward = false;
     continueMoving = true;
-    cycleFinished = 0;
   }
 
-  //Ticks per revolution
-  //5330RPM Free Speed
-  //Calculate how far the wheel would go if it rotated once
-  //Use the encoder to find out when it makes one revolution
-  /*
-    Initially: Find the Yaw and rotate to that point
-                Find the distance and start moving
-                Store the distance
-                ____________________________________ Go a quarter of the way using the distance
-    Second Step: Recaclulate the Yaw of that target or find a closer target and get the yaw
-                  Find the distance and start moving
-                  _______________________________Go a half of the way using the distance calculated from this step 
-                  find out what it would be if had started
-    Third Step: Repeat for half and three quarter until the target is reached
-  */
-
-  //0.00833333 repeating per degree
   
   final double degreeToMeterConst = 0.00833333;
   double motorPower;
+  double motorPowerToTurn;
+
   double currentDistanceAwayFromTarget;
+  double currentAngleAwayFromTargt;
+
+  // Todo
+  // Get second encoder working
+  // Fix weird bug that forces you to invert one wheel to go straight
+
+  // Making movement smooth
+  // Move in all if statements and add the amount you need to turn to to the wheel that need to move faster in order for the robot to turn
+  // Subtract the normal wheel movement from the wheel that is moving faster to find out when to tell the wheel that is moving faster to stop moving faster
+  // Remove the resetting thing
+  // You might need to slow down the wheel that is going at normal speed (I'll find out when I test it)
+
+  Boolean hasTurned = false;
+  
 
   public void autonomousPeriodic() 
   {
 
       //If ball is left of the robot
-      if((modularEncoder.getDistance()+0.04 < -degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
+      if((leftModularEncoder.getDistance()+0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
       {
-        currentDistanceAwayFromTarget = (-degreeToTarget*degreeToMeterConst) - modularEncoder.getDistance();
-        modularPIDController.setP(8);
-        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-        theTank.drive(motorPower, motorPower);
+        hasTurned = true;
+
+        //Rotate information
+        currentAngleAwayFromTargt = (-degreeToTarget*degreeToMeterConst) - leftModularEncoder.getDistance();
+        motorPowerToTurn = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+      
+        //Foward information
+        currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+        //Moving Target
+        theTank.drive(motorPowerToTurn, motorPowerToTurn);
         System.out.println("To Left with motor power" + motorPower);
-        //theTank.drive(-0.9, -0.9);
       }
       //If ball is right of the camera
-      else if(((-modularEncoder.getDistance())+0.04 < degreeToTarget*degreeToMeterConst) && !shouldMoveFoward && continueMoving)
+      /*You wil be subtracting between the left encoder and right encoder here*/
+      else if(((-leftModularEncoder.getDistance())+0.04 < degreeToTarget*degreeToMeterConst) && continueMoving)
       {
-        currentDistanceAwayFromTarget = (degreeToTarget*degreeToMeterConst) - (-modularEncoder.getDistance());
-        modularPIDController.setP(8);
-        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-        theTank.drive(-motorPower, -motorPower);
-        System.out.println("To Right with motor power" + motorPower);
-        //theTank.drive(0.9, 0.9);
-      }
-      else if((-modularEncoder.getDistance() < distanceToTarget/4) && shouldMoveFoward && continueMoving)
-      {
-        currentDistanceAwayFromTarget = distanceToTarget + modularEncoder.getDistance();
-        modularPIDController.setP(0.4);
-        motorPower = MathUtil.clamp(modularPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-        theTank.drive(-motorPower, motorPower);
-        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + "Encoder Distance Covered: " + modularEncoder.getDistance());
-        //theTank.drive(0.4, -0.4);
-      }
-      else
-      {
-        System.out.println("else statement running");
-        if(continueMoving)
-        {
-          System.out.println("Cycle changing");
-          theTank.drive(0, 0);
-          shouldMoveFoward = !shouldMoveFoward;
-          cycleFinished++;
-          modularEncoder.reset();
-          if(cycleFinished%2 == 0)
-          {
-            info = ballTracker.getTargetGoal();
-            distanceToTarget = info.get("Distance");
-            degreeToTarget = info.get("Yaw");
-          }
+        hasTurned = true;
 
-          if(distanceToTarget < 0.04)
-          {
-            System.out.println("Robot stop");
-            continueMoving =false;
-          }
-        }
+        //Rotate information
+        currentAngleAwayFromTargt = (degreeToTarget*degreeToMeterConst) - (-leftModularEncoder.getDistance());
+        motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+        //Foward information
+        currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+        //Moving Target
+        theTank.drive(-motorPowerToTurn, -motorPowerToTurn);
+        System.out.println("To Right with motor power" + motorPower);
       }
+      else if((-leftModularEncoder.getDistance() < distanceToTarget/4) && continueMoving)
+      {
+        if(hasTurned){
+          leftModularEncoder.reset();
+          rightModularEncoder.reset();
+          hasTurned = false;
+        }
+        if(distanceToTarget < 0.04){
+          theTank.drive(0, 0);
+        }
+
+        //Foward information
+        currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+        //Moving information
+        theTank.drive(-motorPower, motorPower);
+        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + "Encoder Distance Covered: " + leftModularEncoder.getDistance());
+      }
+      info = ballTracker.getTargetGoal();
+      distanceToTarget = info.get("Distance");
+      degreeToTarget = info.get("Yaw");
   }
 }
