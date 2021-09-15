@@ -294,7 +294,7 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() 
   {
     
-      //If ball is left of the robot
+      //If ball is right of the robot
       if(( (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
@@ -308,17 +308,16 @@ public class Robot extends TimedRobot {
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
         //Moving to Target
-        theTank.drive(MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0), motorPower);
+        theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
         System.out.println("To Left excess | Left: "+ MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0) + "Right: " + motorPower);
       }
-      //If ball is right of the camera
-      /*You wil be subtracting between the left encoder and right encoder here*/
-      else if(((   ((-rightModularEncoder.getDistance())+0.04) + leftModularEncoder.getDistance()) < degreeToTarget*degreeToMeterConst) && continueMoving)
+      //If ball is left of the camera
+      else if(((rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
         //Rotate information
-        currentAngleAwayFromTargt = (degreeToTarget*degreeToMeterConst) - (-leftModularEncoder.getDistance());
+        currentAngleAwayFromTargt = (degreeToTarget*degreeToMeterConst) - rightModularEncoder.getDistance();
         motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
         //Foward information
@@ -326,8 +325,8 @@ public class Robot extends TimedRobot {
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
         //Moving to Target
-        theTank.drive(-motorPower, MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0));
-        System.out.println("To Right excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0));
+        theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
+        System.out.println("To Right excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
       }
       else if((-leftModularEncoder.getDistance() < distanceToTarget/4) && continueMoving)
       {
