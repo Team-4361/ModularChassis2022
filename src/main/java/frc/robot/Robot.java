@@ -100,7 +100,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.3175, 0);
+    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.1397, 0);
 
     dataMap = new HashMap<String, Double>();
 
@@ -120,7 +120,7 @@ public class Robot extends TimedRobot {
      * double[] stickVal = sticks.GetDrive(); stickVal[0] = stickVal[0]*-.8;
      * stickVal[1] = stickVal[1]*-.8;
      */
-
+    
     if (mode == 1) {
       
       theTank.drive(-lStick.getY(), rStick.getY());
@@ -263,6 +263,7 @@ public class Robot extends TimedRobot {
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
     leftModularEncoder.reset();
+    rightModularEncoder.reset();
     shouldMoveFoward = false;
     continueMoving = true;
   }
@@ -292,8 +293,9 @@ public class Robot extends TimedRobot {
   //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
   {
+    
       //If ball is left of the robot
-      if(( ((leftModularEncoder.getDistance()+0.04) - rightModularEncoder.getDistance()) < -degreeToTarget*degreeToMeterConst) && continueMoving)
+      if(( (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
@@ -307,7 +309,7 @@ public class Robot extends TimedRobot {
 
         //Moving to Target
         theTank.drive(MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0), motorPower);
-        System.out.println("To Left with motor power" + motorPower);
+        System.out.println("To Left excess | Left: "+ MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0) + "Right: " + motorPower);
       }
       //If ball is right of the camera
       /*You wil be subtracting between the left encoder and right encoder here*/
@@ -324,8 +326,8 @@ public class Robot extends TimedRobot {
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
         //Moving to Target
-        theTank.drive(-motorPower, MathUtil.clamp(-motorPowerToTurn-motopower, -1.0, 1.0));
-        System.out.println("To Right with motor power" + motorPower);
+        theTank.drive(-motorPower, MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0));
+        System.out.println("To Right excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0));
       }
       else if((-leftModularEncoder.getDistance() < distanceToTarget/4) && continueMoving)
       {
@@ -335,7 +337,8 @@ public class Robot extends TimedRobot {
           hasTurned = false;
         }
         if(distanceToTarget < 0.04){
-          theTank.drive(0, 0);
+          //theTank.drive(0, 0);
+          System.out.println("Robot Stop");
         }
 
         //Foward information
