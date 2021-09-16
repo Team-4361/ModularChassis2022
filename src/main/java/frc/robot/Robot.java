@@ -295,7 +295,7 @@ public class Robot extends TimedRobot {
   {
     
       //If ball is right of the robot
-      if(( (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
+      if( (degreeToTarget*degreeToMeterConst) > 0 && ((-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
@@ -309,10 +309,10 @@ public class Robot extends TimedRobot {
 
         //Moving to Target
         theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
-        System.out.println("To Left excess | Left: "+ MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0) + "Right: " + motorPower);
+        System.out.println("To Right excess | Left: "+ MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0) + "Right: " + motorPower);
       }
       //If ball is left of the camera
-      else if(((rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < degreeToTarget*degreeToMeterConst) && continueMoving)
+      else if(((-degreeToTarget*degreeToMeterConst) > 0 && (rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < degreeToTarget*degreeToMeterConst) && continueMoving)
       {
         hasTurned = true;
 
@@ -326,7 +326,7 @@ public class Robot extends TimedRobot {
 
         //Moving to Target
         theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
-        System.out.println("To Right excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
+        System.out.println("To Left excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
       }
       else if((-leftModularEncoder.getDistance() < distanceToTarget/4) && continueMoving)
       {
