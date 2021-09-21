@@ -11,11 +11,17 @@ import java.util.HashMap;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+//import org.graalvm.compiler.core.common.calc.CanonicalCondition;
+
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,7 +45,7 @@ public class Robot extends TimedRobot {
   // if mode = 2; thor's hammer
   // if mode = 3; romulus.
   // if mode = 4; Xbox tank/arcade drive control (no operator)
-  public static int mode = 3;
+  public static int mode = 5;
   SendableChooser<String> modularMode = new SendableChooser<>();
 
 
@@ -63,6 +69,10 @@ public class Robot extends TimedRobot {
   // Joystick 1 = Right Drive
   Joystick lStick = new Joystick(0);
   Joystick rStick = new Joystick(1);
+
+  Joystick cannonControls = new Joystick(2);
+  JoystickButton rightBumper = new JoystickButton(cannonControls, 6);
+  JoystickButton leftBumper = new JoystickButton(cannonControls, 5);
 
   XboxController xCont = new XboxController(2);
   XboxArcade xContArCon = new XboxArcade(2, Hand.kLeft);
@@ -98,6 +108,10 @@ public class Robot extends TimedRobot {
   PIDController distancePIDController;
   PIDController rotationPIDController;
 
+  DigitalInput rightLimit, leftLimit;
+
+  Timer valveTimer = new Timer();
+
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.1397, 0);
@@ -112,6 +126,9 @@ public class Robot extends TimedRobot {
     //Distance per pulse is in meters
     leftModularEncoder.setDistancePerPulse(distancePerPulse);
     rightModularEncoder.setDistancePerPulse(distancePerPulse);
+
+    rightLimit = new DigitalInput(5);
+    leftLimit = new DigitalInput(6);
   }
 
   @Override
@@ -237,6 +254,46 @@ public class Robot extends TimedRobot {
 
     }
 
+    //T-shirt Cannon
+    if (mode == 5){
+      theTank.drive(-lStick.getY(), rStick.getY());
+      //Talon 4 for rotating
+      if (rightLimit != null && leftLimit != null){
+        if(!leftLimit.get()){
+          if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
+            modTalon1.set(1.0);
+          }else if(!leftBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
+            modTalon1.set(0.0);
+          }
+        }
+        else if(rightLimit.get()){
+          modTalon1.set(0.0);
+        }
+
+        if(!rightLimit.get()){
+          if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
+            modTalon1.set(-1.0);
+          }else if(!rightBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
+            modTalon1.set(0.0);
+          }
+        }
+        else if(rightLimit.get()){
+          modTalon4.set(0.0);
+        }
+      }
+
+      // if(xCont.getTriggerAxis(Hand.kRight) == 0){
+      //   if(!hasTimerStarted){
+      //     valveTimer.start();
+      //     hasTimerStarted = false;
+      //   }
+      // }
+
+      
+
+    }
+      
+
     //System.out.println(leftModularEncoder.getDistance());
 
     // Smartdashboard Values
@@ -289,6 +346,7 @@ public class Robot extends TimedRobot {
   //Try using the old code and just removing setting the motors to 0.
 
   Boolean hasTurned = false;
+  Boolean hasTimerStarted = false;
   
   //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
