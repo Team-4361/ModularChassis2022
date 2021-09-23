@@ -73,6 +73,8 @@ public class Robot extends TimedRobot {
   Joystick cannonControls = new Joystick(2);
   JoystickButton rightBumper = new JoystickButton(cannonControls, 6);
   JoystickButton leftBumper = new JoystickButton(cannonControls, 5);
+  JoystickButton yBTN = new JoystickButton(cannonControls, 4);
+  JoystickButton aBTN = new JoystickButton(cannonControls, 2);
 
   XboxController xCont = new XboxController(2);
   XboxArcade xContArCon = new XboxArcade(2, Hand.kLeft);
@@ -110,7 +112,12 @@ public class Robot extends TimedRobot {
 
   DigitalInput rightLimit, leftLimit;
 
-  Timer valveTimer = new Timer();
+  Boolean ybtnReleased = false;
+  Boolean abtnReleased = false;
+
+  Boolean rightBumperReleased = false;
+  Boolean leftBumperReleased = false;
+
 
   @Override
   public void robotInit() {
@@ -262,35 +269,48 @@ public class Robot extends TimedRobot {
         if(!leftLimit.get()){
           if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
             modTalon1.set(1.0);
+            leftBumperReleased = true;
           }else if(!leftBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
             modTalon1.set(0.0);
+            leftBumperReleased = false;
           }
         }
-        else if(rightLimit.get()){
+        else if(leftLimit.get()){
           modTalon1.set(0.0);
         }
 
         if(!rightLimit.get()){
           if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
             modTalon1.set(-1.0);
+            rightBumperReleased = true;
           }else if(!rightBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
             modTalon1.set(0.0);
+            rightBumperReleased = false;
           }
         }
         else if(rightLimit.get()){
-          modTalon4.set(0.0);
+          modTalon1.set(0.0);
         }
       }
 
-      // if(xCont.getTriggerAxis(Hand.kRight) == 0){
-      //   if(!hasTimerStarted){
-      //     valveTimer.start();
-      //     hasTimerStarted = false;
-      //   }
-      // }
+      if (aBTN.get()){
+        modTalon2.set(-1.0);
+        abtnReleased = true;
+      }
+      else if(!aBTN.get() && abtnReleased){
+        modTalon2.set(0.0);
+        abtnReleased = false;
+      }
 
+      if (yBTN.get()){
+        modTalon2.set(1.0);
+        ybtnReleased = true;
+      }
+      else if(!yBTN.get() && ybtnReleased){
+        modTalon2.set(0.0);
+        ybtnReleased = false;
+      }
       
-
     }
       
 
@@ -346,7 +366,6 @@ public class Robot extends TimedRobot {
   //Try using the old code and just removing setting the motors to 0.
 
   Boolean hasTurned = false;
-  Boolean hasTimerStarted = false;
   
   //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
