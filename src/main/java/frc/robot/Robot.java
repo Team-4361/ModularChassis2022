@@ -270,7 +270,7 @@ public class Robot extends TimedRobot {
           if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
             modTalon1.set(1.0);
             leftBumperReleased = true;
-          }else if(!leftBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
+          }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
             modTalon1.set(0.0);
             leftBumperReleased = false;
           }
@@ -283,7 +283,7 @@ public class Robot extends TimedRobot {
           if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
             modTalon1.set(-1.0);
             rightBumperReleased = true;
-          }else if(!rightBumper.get()/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
+          }else if(!rightBumper.get() && rightBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
             modTalon1.set(0.0);
             rightBumperReleased = false;
           }
