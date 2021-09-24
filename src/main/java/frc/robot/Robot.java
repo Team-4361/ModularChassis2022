@@ -75,6 +75,8 @@ public class Robot extends TimedRobot {
   JoystickButton leftBumper = new JoystickButton(cannonControls, 5);
   JoystickButton yBTN = new JoystickButton(cannonControls, 4);
   JoystickButton aBTN = new JoystickButton(cannonControls, 2);
+  JoystickButton rightTriggerBTN = new JoystickButton(cannonControls, number);
+
 
   XboxController xCont = new XboxController(2);
   XboxArcade xContArCon = new XboxArcade(2, Hand.kLeft);
@@ -118,6 +120,11 @@ public class Robot extends TimedRobot {
   Boolean rightBumperReleased = false;
   Boolean leftBumperReleased = false;
 
+  Boolean valveTimerStarted = false;
+  Boolean runValveOpen = false;
+
+  Timer valveTimer;
+
 
   @Override
   public void robotInit() {
@@ -136,6 +143,8 @@ public class Robot extends TimedRobot {
 
     rightLimit = new DigitalInput(5);
     leftLimit = new DigitalInput(6);
+
+    valveTimer = new Timer();
   }
 
   @Override
@@ -310,6 +319,23 @@ public class Robot extends TimedRobot {
         modTalon2.set(0.0);
         ybtnReleased = false;
       }
+
+      if(rightTriggerBTN.get()){
+        valveTimer.reset()
+        valveTimer.start()
+        runValveOpen = true;
+      }
+
+      if(runValveOpen){
+        if(!valveTimer.advanceIfElasped(3.0)){
+          modTalon4.set(1.0);
+        }
+        if(valveTimer.advanceIfElasped(3.0)){
+          modTalon4.set(-1.0);
+          runValveOpen = false;
+        }
+      }
+
       
     }
       
