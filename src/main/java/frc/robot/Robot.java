@@ -75,7 +75,9 @@ public class Robot extends TimedRobot {
   JoystickButton leftBumper = new JoystickButton(cannonControls, 5);
   JoystickButton yBTN = new JoystickButton(cannonControls, 4);
   JoystickButton aBTN = new JoystickButton(cannonControls, 2);
-  JoystickButton rightTriggerBTN = new JoystickButton(cannonControls, number);
+  JoystickButton rightTriggerBTN = new JoystickButton(cannonControls, 8);
+  JoystickButton leftTriggerBTN = new JoystickButton(cannonControls, 7);
+  JoystickButton xBTN = new JoystickButton(cannonControls, 1);
 
 
   XboxController xCont = new XboxController(2);
@@ -120,6 +122,9 @@ public class Robot extends TimedRobot {
   Boolean rightBumperReleased = false;
   Boolean leftBumperReleased = false;
 
+  Boolean leftLimitReached = false;
+  Boolean rightLimitReached =false;
+
   Boolean valveTimerStarted = false;
   Boolean runValveOpen = false;
 
@@ -141,8 +146,8 @@ public class Robot extends TimedRobot {
     leftModularEncoder.setDistancePerPulse(distancePerPulse);
     rightModularEncoder.setDistancePerPulse(distancePerPulse);
 
-    rightLimit = new DigitalInput(5);
-    leftLimit = new DigitalInput(6);
+    rightLimit = new DigitalInput(6);
+    leftLimit = new DigitalInput(5);
 
     valveTimer = new Timer();
   }
@@ -275,20 +280,8 @@ public class Robot extends TimedRobot {
       theTank.drive(-lStick.getY(), rStick.getY());
       //Talon 4 for rotating
       if (rightLimit != null && leftLimit != null){
-        if(!leftLimit.get()){
-          if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
-            modTalon1.set(1.0);
-            leftBumperReleased = true;
-          }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
-            modTalon1.set(0.0);
-            leftBumperReleased = false;
-          }
-        }
-        else if(leftLimit.get()){
-          modTalon1.set(0.0);
-        }
-
         if(!rightLimit.get()){
+          rightLimitReached = true;
           if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
             modTalon1.set(-1.0);
             rightBumperReleased = true;
@@ -297,13 +290,31 @@ public class Robot extends TimedRobot {
             rightBumperReleased = false;
           }
         }
-        else if(rightLimit.get()){
+        else if(rightLimit.get() && rightLimitReached){
+          modTalon1.set(0.0);
+          rightLimitReached = false;
+        }
+        
+        if(!leftLimit.get()){
+          leftLimitReached = true;
+          if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
+            System.out.println("running");
+            modTalon1.set(1.0);
+            leftBumperReleased = true;
+          }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
+            modTalon1.set(0.0);
+            leftBumperReleased = false;
+          }
+        }
+        else if(leftLimit.get() && leftLimitReached){
+          leftLimitReached = false;
           modTalon1.set(0.0);
         }
       }
 
+
       if (aBTN.get()){
-        modTalon2.set(-1.0);
+        modTalon2.set(-0.45);
         abtnReleased = true;
       }
       else if(!aBTN.get() && abtnReleased){
@@ -312,7 +323,7 @@ public class Robot extends TimedRobot {
       }
 
       if (yBTN.get()){
-        modTalon2.set(1.0);
+        modTalon2.set(0.45);
         ybtnReleased = true;
       }
       else if(!yBTN.get() && ybtnReleased){
@@ -320,18 +331,18 @@ public class Robot extends TimedRobot {
         ybtnReleased = false;
       }
 
-      if(rightTriggerBTN.get()){
-        valveTimer.reset()
-        valveTimer.start()
+      if(rightTriggerBTN.get() && leftTriggerBTN.get() && xBTN.get()){
+        valveTimer.reset();
+        valveTimer.start();
         runValveOpen = true;
       }
 
       if(runValveOpen){
-        if(!valveTimer.advanceIfElasped(3.0)){
-          modTalon4.set(1.0);
-        }
-        if(valveTimer.advanceIfElasped(3.0)){
+        if(!valveTimer.advanceIfElapsed(1.0)){
           modTalon4.set(-1.0);
+        }
+        if(valveTimer.advanceIfElapsed(1.0)){
+          modTalon4.set(0.0);
           runValveOpen = false;
         }
       }
