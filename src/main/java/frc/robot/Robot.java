@@ -287,6 +287,7 @@ public class Robot extends TimedRobot {
             rightBumperReleased = true;
           }else if(!rightBumper.get() && rightBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
             modTalon1.set(0.0);
+            rightLimitReached = false;
             rightBumperReleased = false;
           }
         }
@@ -304,6 +305,7 @@ public class Robot extends TimedRobot {
           }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
             modTalon1.set(0.0);
             leftBumperReleased = false;
+            leftLimitReached = false;
           }
         }
         else if(leftLimit.get() && leftLimitReached){
