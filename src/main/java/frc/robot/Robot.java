@@ -277,9 +277,12 @@ public class Robot extends TimedRobot {
 
     //T-shirt Cannon
     if (mode == 5){
+      
       theTank.drive(-lStick.getY(), rStick.getY());
       //Talon 4 for rotating
+      System.out.println("Outside");
       if (rightLimit != null && leftLimit != null){
+
         if(!rightLimit.get()){
           rightLimitReached = true;
           if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
@@ -290,16 +293,17 @@ public class Robot extends TimedRobot {
             rightLimitReached = false;
             rightBumperReleased = false;
           }
+          System.out.println("moving right");
         }
         else if(rightLimit.get() && rightLimitReached){
           modTalon1.set(0.0);
           rightLimitReached = false;
+          System.out.println("right limit running");
         }
-        
+
         if(!leftLimit.get()){
           leftLimitReached = true;
           if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
-            System.out.println("running");
             modTalon1.set(1.0);
             leftBumperReleased = true;
           }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
@@ -307,11 +311,14 @@ public class Robot extends TimedRobot {
             leftBumperReleased = false;
             leftLimitReached = false;
           }
+          System.out.println("moving left");
         }
         else if(leftLimit.get() && leftLimitReached){
           leftLimitReached = false;
           modTalon1.set(0.0);
+          System.out.println("leftLimit running");
         }
+        
       }
 
 
