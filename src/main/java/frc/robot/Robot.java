@@ -114,7 +114,9 @@ public class Robot extends TimedRobot {
   PIDController distancePIDController;
   PIDController rotationPIDController;
 
-  DigitalInput rightLimit, leftLimit;
+  DigitalInput rightLimit = new DigitalInput(6);
+  DigitalInput leftLimit = new DigitalInput(8);
+
 
   Boolean ybtnReleased = false;
   Boolean abtnReleased = false;
@@ -130,10 +132,13 @@ public class Robot extends TimedRobot {
 
   Timer valveTimer;
 
+  int ticksToRightLimit;
+
 
   @Override
   public void robotInit() {
     ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.1397, 0);
+    ticksToRightLimit = 145; //Something
 
     dataMap = new HashMap<String, Double>();
 
@@ -146,8 +151,8 @@ public class Robot extends TimedRobot {
     leftModularEncoder.setDistancePerPulse(distancePerPulse);
     rightModularEncoder.setDistancePerPulse(distancePerPulse);
 
-    rightLimit = new DigitalInput(6);
-    leftLimit = new DigitalInput(5);
+    // rightLimit = new DigitalInput(8);
+    // leftLimit = new DigitalInput(5);
 
     valveTimer = new Timer();
   }
@@ -280,45 +285,51 @@ public class Robot extends TimedRobot {
       
       theTank.drive(-lStick.getY(), rStick.getY());
       //Talon 4 for rotating
-      System.out.println("Outside");
+      //System.out.println("Outside");
       if (rightLimit != null && leftLimit != null){
 
-        if(!rightLimit.get()){
-          rightLimitReached = true;
-          if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
-            modTalon1.set(-1.0);
-            rightBumperReleased = true;
-          }else if(!rightBumper.get() && rightBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
-            modTalon1.set(0.0);
-            rightLimitReached = false;
-            rightBumperReleased = false;
-          }
-          System.out.println("moving right");
-        }
-        else if(rightLimit.get() && rightLimitReached){
-          modTalon1.set(0.0);
-          rightLimitReached = false;
-          System.out.println("right limit running");
-        }
-
         if(!leftLimit.get()){
+          //if(leftLimit.get() == false){
           leftLimitReached = true;
           if (leftBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kLeft)*/){
             modTalon1.set(1.0);
             leftBumperReleased = true;
+            ticksToRightLimit += 1;
           }else if(!leftBumper.get() && leftBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kLeft)*/){
             modTalon1.set(0.0);
             leftBumperReleased = false;
             leftLimitReached = false;
           }
-          System.out.println("moving left");
+          //System.out.println("moving left");
         }
         else if(leftLimit.get() && leftLimitReached){
           leftLimitReached = false;
           modTalon1.set(0.0);
-          System.out.println("leftLimit running");
+         // System.out.println("leftLimit running");
         }
-        
+
+        if(ticksToRightLimit > 0/*rightLimit.get()*/){
+          //if(rightLimit.get() == false){
+          rightLimitReached = true;
+          if (rightBumper.get()/*xCont.getBumperPressed(GenericHID.Hand.kRight)*/){
+            modTalon1.set(-1.0);
+            rightBumperReleased = true;
+            ticksToRightLimit -= 1;
+          }else if(!rightBumper.get() && rightBumperReleased/*xCont.getBumperReleased(GenericHID.Hand.kRight)*/){
+            modTalon1.set(0.0);
+            rightLimitReached = false;
+            rightBumperReleased = false;
+          }
+          //System.out.println("moving right");
+        }
+        else if(/*!rightLimit.get()*/(ticksToRightLimit <= 0) && rightLimitReached){
+          modTalon1.set(0.0);
+          rightLimitReached = false;
+          //System.out.println("right limit running");
+        }
+        //System.out.println(rightLimit.get());
+
+        System.out.println(ticksToRightLimit);
       }
 
 
