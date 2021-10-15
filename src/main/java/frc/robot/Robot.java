@@ -114,7 +114,7 @@ public class Robot extends TimedRobot {
   PIDController distancePIDController;
   PIDController rotationPIDController;
 
-  DigitalInput rightLimit = new DigitalInput(6);
+  //DigitalInput rightLimit = new DigitalInput(6);
   DigitalInput leftLimit = new DigitalInput(8);
 
 
@@ -286,7 +286,7 @@ public class Robot extends TimedRobot {
       theTank.drive(-lStick.getY(), rStick.getY());
       //Talon 4 for rotating
       //System.out.println("Outside");
-      if (rightLimit != null && leftLimit != null){
+      if (/*rightLimit != null &&*/ leftLimit != null){
 
         if(!leftLimit.get()){
           //if(leftLimit.get() == false){
