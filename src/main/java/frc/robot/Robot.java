@@ -138,7 +138,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.1397, 0);
+    ballTracker = new BallVisionCamera(networkTableName, cameraName, 0.4572, 0); 
     ticksToRightLimit = 145; //Something
 
     dataMap = new HashMap<String, Double>();
@@ -392,9 +392,9 @@ public class Robot extends TimedRobot {
   }
 
   public void autonomousInit() {
-    distancePIDController = new PIDController(0.8,0,0);
+    distancePIDController = new PIDController(1,0,0);
     rotationPIDController = new PIDController(10,0,0);
-    rotatingdistancePIDController = new PIDController(0.4,0,0);
+    rotatingdistancePIDController = new PIDController(1,0,0);
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
@@ -431,7 +431,7 @@ public class Robot extends TimedRobot {
   {
     
       //If ball is right of the robot
-      if( (degreeToTarget*DEGREESTOMETERS) - 0.1 > 0 /*&& ((-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving)
+      if( (degreeToTarget*DEGREESTOMETERS) - 0.04 > 0 /*&& ((-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving)
       {
         hasTurned = true;
 
@@ -445,15 +445,15 @@ public class Robot extends TimedRobot {
 
         //Moving to Target
         theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
-        System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + "Right: " + motorPower);
+        System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + " Right: " + motorPower + " Current distance to target: " + distanceToTarget);
       }
       //If ball is left of the camera
-      else if(((-degreeToTarget*DEGREESTOMETERS) - 0.1 > 0 /*&& (rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving))
+      else if(((-degreeToTarget*DEGREESTOMETERS) - 0.04 > 0 /*&& (rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving))
       {
         hasTurned = true;
 
         //Rotate information
-        currentAngleAwayFromTargt = (-degreeToTarget*DEGREESTOMETERS) - rightModularEncoder.getDistance();
+        currentAngleAwayFromTargt = (degreeToTarget*DEGREESTOMETERS) - rightModularEncoder.getDistance();
         motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentAngleAwayFromTargt, 0), -1.0, 1.0);
 
         //Foward information
@@ -462,9 +462,9 @@ public class Robot extends TimedRobot {
 
         //Moving to Target
         theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
-        System.out.println("To Right excess | Left: " + -motorPower + "Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
+        System.out.println("To Right excess | Left: " + -motorPower + " Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0)  + " Current distance to target: " + distanceToTarget);
       }
-      else if((-leftModularEncoder.getDistance() < distanceToTarget) && continueMoving)
+      else if(/*(-leftModularEncoder.getDistance() < distanceToTarget) &&*/ continueMoving)
       {
         if(hasTurned){
           leftModularEncoder.reset();
@@ -473,15 +473,16 @@ public class Robot extends TimedRobot {
         }
 
         //Foward information
-        currentDistanceAwayFromTarget = distanceToTarget + leftModularEncoder.getDistance();
+        currentDistanceAwayFromTarget = distanceToTarget - rightModularEncoder.getDistance();
         motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
         //Moving to target
         theTank.drive(-motorPower, motorPower);
         System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + " Encoder Distance Covered: " + -leftModularEncoder.getDistance());
       }
-      info = ballTracker.getTargetGoal();
-      distanceToTarget = info.get("Distance");
-      degreeToTarget = info.get("Yaw");
+      
+        info = ballTracker.getTargetGoal();
+        distanceToTarget = info.get("Distance");
+        degreeToTarget = info.get("Yaw");
   }
 }
