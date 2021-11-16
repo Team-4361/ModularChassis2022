@@ -11,6 +11,8 @@ import java.util.HashMap;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import org.photonvision.PhotonCamera;
+
 //import org.graalvm.compiler.core.common.calc.CanonicalCondition;
 
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -25,6 +27,7 @@ import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.Library.Autonomous.BallVisionCamera;
 import frc.Library.Chassis.TankDrive;
@@ -393,8 +396,8 @@ public class Robot extends TimedRobot {
 
   public void autonomousInit() {
     distancePIDController = new PIDController(1,0,0);
-    rotationPIDController = new PIDController(10,0,0);
-    rotatingdistancePIDController = new PIDController(1,0,0);
+    rotationPIDController = new PIDController(20,0,0);
+    rotatingdistancePIDController = new PIDController(0.25,0,0);
     HashMap<String, Double> info = ballTracker.getTargetGoal();
     distanceToTarget = info.get("Distance");
     degreeToTarget = info.get("Yaw");
@@ -410,79 +413,134 @@ public class Robot extends TimedRobot {
   double motorPowerToTurn;
 
   double currentDistanceAwayFromTarget;
-  double currentAngleAwayFromTargt;
+  double currentTurningDistanceFromTarget;
 
-  // Todo
-  // Get second encoder working
-  // Fix weird bug that forces you to invert one wheel to go straight
 
-  // Making movement smooth
-  // Move in all if statements and add the amount you need to turn to to the wheel that need to move faster in order for the robot to turn
-  // Subtract the normal wheel movement from the wheel that is moving faster to find out when to tell the wheel that is moving faster to stop moving faster
-  // Remove the resetting thing
-  // You might need to slow down the wheel that is going at normal speed (I'll find out when I test it)
-  
-  //Try using the old code and just removing setting the motors to 0.
 
   Boolean hasTurned = false;
+  final double DISTANCETOTARGETFACTOR = 1.36d;
+
+
+
+
+
+
+
+  final double CAMERA_HEIGHT_METERS = Units.inchesToMeters(24);
+  final double TARGET_HEIGHT_METERS = Units.feetToMeters(5);
+  // Angle between horizontal and the camera.
+  final double CAMERA_PITCH_RADIANS = Units.degreesToRadians(0);
+
+  // How far from the target we want to be
+  final double GOAL_RANGE_METERS = Units.feetToMeters(3);
+
+  // Change this to match the name of your camera
+  PhotonCamera camera = new PhotonCamera("photonvision");
+
+  // PID constants should be tuned per robot
+  final double LINEAR_P = 0.1;
+  final double LINEAR_D = 0.0;
+  PIDController forwardController = new PIDController(LINEAR_P, 0, LINEAR_D);
+
+  final double ANGULAR_P = 0.1;
+  final double ANGULAR_D = 0.0;
+  PIDController turnController = new PIDController(ANGULAR_P, 0, ANGULAR_D);
+
+  XboxController xboxController = new XboxController(0);
   
   //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
   {
-    
-      //If ball is right of the robot
-      if( (degreeToTarget*DEGREESTOMETERS) - 0.04 > 0 /*&& ((-leftModularEncoder.getDistance() - rightModularEncoder.getDistance()) + 0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving)
-      {
-        hasTurned = true;
+    double forwardSpeed;
+    double rotationSpeed;
 
-        //Rotate information
-        currentAngleAwayFromTargt = (degreeToTarget*DEGREESTOMETERS) - (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance());
-        motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentAngleAwayFromTargt, 0), -1.0, 1.0);
-      
-        //Foward information: May be faulty when it comes to math
-        currentDistanceAwayFromTarget = distanceToTarget - rightModularEncoder.getDistance();
-        motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+        forwardSpeed = -1.0 * xboxController.getY(GenericHID.Hand.kRight);
 
-        //Moving to Target
-        theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
-        System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + " Right: " + motorPower + " Current distance to target: " + distanceToTarget);
-      }
-      //If ball is left of the camera
-      else if(((-degreeToTarget*DEGREESTOMETERS) - 0.04 > 0 /*&& (rightModularEncoder.getDistance() + leftModularEncoder.getDistance()) +0.04 < -degreeToTarget*DEGREESTOMETERS)*/ && continueMoving))
-      {
-        hasTurned = true;
+        if (xboxController.getAButton()) {
+            // Vision-alignment mode
+            // Query the latest result from PhotonVision
+            var result = camera.getLatestResult();
 
-        //Rotate information
-        currentAngleAwayFromTargt = (degreeToTarget*DEGREESTOMETERS) - rightModularEncoder.getDistance();
-        motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentAngleAwayFromTargt, 0), -1.0, 1.0);
-
-        //Foward information
-        currentDistanceAwayFromTarget = distanceToTarget - rightModularEncoder.getDistance();
-        motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-
-        //Moving to Target
-        theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
-        System.out.println("To Right excess | Left: " + -motorPower + " Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0)  + " Current distance to target: " + distanceToTarget);
-      }
-      else if(/*(-leftModularEncoder.getDistance() < distanceToTarget) &&*/ continueMoving)
-      {
-        if(hasTurned){
-          leftModularEncoder.reset();
-          rightModularEncoder.reset();
-          hasTurned = false;
+            if (result.hasTargets()) {
+                // Calculate angular turn power
+                // -1.0 required to ensure positive PID controller effort _increases_ yaw
+                rotationSpeed = -1.0 * turnController.calculate(result.getBestTarget().getYaw(), 0);
+            } else {
+                // If we have no targets, stay still.
+                rotationSpeed = 0;
+            }
+        } else {
+            // Manual Driver Mode
+            rotationSpeed = xboxController.getX(GenericHID.Hand.kLeft);
         }
 
-        //Foward information
-        currentDistanceAwayFromTarget = distanceToTarget - rightModularEncoder.getDistance();
-        motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+        // Use our forward/turn speeds to control the drivetrain
+        theTank.drive(-forwardSpeed, forwardSpeed);
+    }
+      // //If ball is right of the robot
+      // if( (degreeToTarget*DEGREESTOMETERS) - 0.04 > 0)
+      // {
+      //   hasTurned = true;
 
-        //Moving to target
-        theTank.drive(-motorPower, motorPower);
-        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget + " Encoder Distance Covered: " + -leftModularEncoder.getDistance());
-      }
+      //   //Rotate information
+      //   currentTurningDistanceFromTarget = (degreeToTarget*DEGREESTOMETERS) - (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance());
+      //   motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
       
-        info = ballTracker.getTargetGoal();
-        distanceToTarget = info.get("Distance");
-        degreeToTarget = info.get("Yaw");
-  }
+      //   //Foward information: May be faulty when it comes to math
+      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+      //   motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+      //   //Moving to Target
+      //   theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
+
+      //   System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + " Right: " + motorPower + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
+      //   //System.out.println("Moving left Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      // }
+      // //If ball is left of the camera
+      // else if(((-degreeToTarget*DEGREESTOMETERS) - 0.04 > 0))
+      // {
+      //   hasTurned = true;
+
+      //   //Rotate information
+      //   currentTurningDistanceFromTarget = (-degreeToTarget*DEGREESTOMETERS) - (rightModularEncoder.getDistance() + leftModularEncoder.getDistance());
+      //   motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
+
+      //   //Foward information
+      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+      //   motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+      //   //Moving to Target
+      //   theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
+
+      //   System.out.println("To Right excess | Left: " + -motorPower + " Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0)  + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
+      //   //System.out.println("Moving right Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      // }
+      // else
+      // {
+      //   if(hasTurned){
+      //     leftModularEncoder.reset();
+      //     rightModularEncoder.reset();
+      //     hasTurned = false;
+      //   }
+
+      //   //Foward information
+      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+      //   motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+      //   //Moving to target
+      //   theTank.drive(-motorPower, motorPower);
+      //   System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget*DISTANCETOTARGETFACTOR + " Encoder Distance Covered: " + -leftModularEncoder.getDistance());
+      //   //System.out.println("Moving Straight Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      // }
+      
+      // try {
+      //   info = ballTracker.getTargetGoal();
+      // } catch (NullPointerException e) {
+      //   System.out.println("Lost sight of a target");
+      //   theTank.drive(0, 0);
+      // }
+        
+      //   distanceToTarget = info.get("Distance");
+      //   degreeToTarget = info.get("Yaw");
+  //}
 }
