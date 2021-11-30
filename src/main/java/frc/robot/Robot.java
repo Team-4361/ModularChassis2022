@@ -451,96 +451,70 @@ public class Robot extends TimedRobot {
   //I assume the righhModularEncoder is positive.
   public void autonomousPeriodic() 
   {
-    double forwardSpeed;
-    double rotationSpeed;
+      //If ball is right of the robot
+      if( (degreeToTarget*DEGREESTOMETERS) - 0.04 > 0)
+      {
+        hasTurned = true;
 
-        forwardSpeed = -1.0 * xboxController.getY(GenericHID.Hand.kRight);
+        //Rotate information
+        currentTurningDistanceFromTarget = (degreeToTarget*DEGREESTOMETERS) - (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance());
+        motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
+      
+        //Foward information: May be faulty when it comes to math
+        currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
-        if (xboxController.getAButton()) {
-            // Vision-alignment mode
-            // Query the latest result from PhotonVision
-            var result = camera.getLatestResult();
+        //Moving to Target
+        theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
 
-            if (result.hasTargets()) {
-                // Calculate angular turn power
-                // -1.0 required to ensure positive PID controller effort _increases_ yaw
-                rotationSpeed = -1.0 * turnController.calculate(result.getBestTarget().getYaw(), 0);
-            } else {
-                // If we have no targets, stay still.
-                rotationSpeed = 0;
-            }
-        } else {
-            // Manual Driver Mode
-            rotationSpeed = xboxController.getX(GenericHID.Hand.kLeft);
+        System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + " Right: " + motorPower + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
+        //System.out.println("Moving left Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      }
+      //If ball is left of the camera
+      else if(((-degreeToTarget*DEGREESTOMETERS) - 0.04 > 0))
+      {
+        hasTurned = true;
+
+        //Rotate information
+        currentTurningDistanceFromTarget = (-degreeToTarget*DEGREESTOMETERS) - (rightModularEncoder.getDistance() + leftModularEncoder.getDistance());
+        motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
+
+        //Foward information
+        currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
+
+        //Moving to Target
+        theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
+
+        System.out.println("To Right excess | Left: " + -motorPower + " Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0)  + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
+        //System.out.println("Moving right Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      }
+      else
+      {
+        if(hasTurned){
+          leftModularEncoder.reset();
+          rightModularEncoder.reset();
+          hasTurned = false;
         }
 
-        // Use our forward/turn speeds to control the drivetrain
-        theTank.drive(-forwardSpeed, forwardSpeed);
-    }
-      // //If ball is right of the robot
-      // if( (degreeToTarget*DEGREESTOMETERS) - 0.04 > 0)
-      // {
-      //   hasTurned = true;
+        //Foward information
+        currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
+        motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
 
-      //   //Rotate information
-      //   currentTurningDistanceFromTarget = (degreeToTarget*DEGREESTOMETERS) - (-leftModularEncoder.getDistance() - rightModularEncoder.getDistance());
-      //   motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
+        //Moving to target
+        theTank.drive(-motorPower, motorPower);
+        System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget*DISTANCETOTARGETFACTOR + " Encoder Distance Covered: " + -leftModularEncoder.getDistance());
+        //System.out.println("Moving Straight Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
+      }
       
-      //   //Foward information: May be faulty when it comes to math
-      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
-      //   motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-
-      //   //Moving to Target
-      //   theTank.drive(MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0), motorPower);
-
-      //   System.out.println("To Left excess | Left: "+ MathUtil.clamp(-motorPowerToTurn-motorPower, -1.0, 1.0) + " Right: " + motorPower + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
-      //   //System.out.println("Moving left Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
-      // }
-      // //If ball is left of the camera
-      // else if(((-degreeToTarget*DEGREESTOMETERS) - 0.04 > 0))
-      // {
-      //   hasTurned = true;
-
-      //   //Rotate information
-      //   currentTurningDistanceFromTarget = (-degreeToTarget*DEGREESTOMETERS) - (rightModularEncoder.getDistance() + leftModularEncoder.getDistance());
-      //   motorPowerToTurn = MathUtil.clamp(rotationPIDController.calculate(currentTurningDistanceFromTarget, 0), -1.0, 1.0);
-
-      //   //Foward information
-      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
-      //   motorPower = MathUtil.clamp(rotatingdistancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-
-      //   //Moving to Target
-      //   theTank.drive(-motorPower, MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0));
-
-      //   System.out.println("To Right excess | Left: " + -motorPower + " Right: " + MathUtil.clamp(motorPowerToTurn+motorPower, -1.0, 1.0)  + " Current distance to target: " + distanceToTarget*DISTANCETOTARGETFACTOR);
-      //   //System.out.println("Moving right Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
-      // }
-      // else
-      // {
-      //   if(hasTurned){
-      //     leftModularEncoder.reset();
-      //     rightModularEncoder.reset();
-      //     hasTurned = false;
-      //   }
-
-      //   //Foward information
-      //   currentDistanceAwayFromTarget = (distanceToTarget*DISTANCETOTARGETFACTOR) - rightModularEncoder.getDistance();
-      //   motorPower = MathUtil.clamp(distancePIDController.calculate(currentDistanceAwayFromTarget, 0), -1.0, 1.0);
-
-      //   //Moving to target
-      //   theTank.drive(-motorPower, motorPower);
-      //   System.out.println("Straight with motor power " + motorPower + " Distance from target: " + distanceToTarget*DISTANCETOTARGETFACTOR + " Encoder Distance Covered: " + -leftModularEncoder.getDistance());
-      //   //System.out.println("Moving Straight Current Distance To Target: " + currentDistanceAwayFromTarget + " Current Angle Away from Target: " + currentTurningDistanceFromTarget);
-      // }
-      
-      // try {
-      //   info = ballTracker.getTargetGoal();
-      // } catch (NullPointerException e) {
-      //   System.out.println("Lost sight of a target");
-      //   theTank.drive(0, 0);
-      // }
+      try {
+        info = ballTracker.getTargetGoal();
+      } catch (NullPointerException e) {
+        System.out.println("Lost sight of a target");
+        theTank.drive(0, 0);
+      }
         
-      //   distanceToTarget = info.get("Distance");
-      //   degreeToTarget = info.get("Yaw");
-  //}
+        distanceToTarget = info.get("Distance");
+        degreeToTarget = info.get("Yaw");
+  }
 }
