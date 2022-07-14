@@ -48,7 +48,7 @@ public class Robot extends TimedRobot {
   // if mode = 2; thor's hammer
   // if mode = 3; romulus.
   // if mode = 4; Xbox tank/arcade drive control (no operator)
-  public static int mode = 5;
+  public static int mode = 3;
   SendableChooser<String> modularMode = new SendableChooser<>();
 
 
@@ -87,15 +87,24 @@ public class Robot extends TimedRobot {
   //XboxArcade xContArCon = new XboxArcade(2, Hand.kLeft);
   // snowblower motor for frisbee shooter
   //WPI_TalonSRX modTalon1 = new WPI_TalonSRX(3);
+
+  // Mode 3 = Intake Motor (Left + Right Bumpers)
   WPI_TalonSRX modTalon1 = new WPI_TalonSRX(8);
+
   // CIM motor for frisbee shooter
+  // Mode 3 = Shooter (Button B)
   WPI_TalonSRX modTalon2 = new WPI_TalonSRX(5);
-  // modular talon 3
+
+  // modular talon 3 
+  // Mode 3 = Agitiator (Button A)
+  // Mode 3 = Reverse Agitator (Button Y)
   WPI_TalonSRX modTalon3 = new WPI_TalonSRX(7);
+
   // modular talon 4
+  // Mode 3 = Indexer (Button B)
   WPI_TalonSRX modTalon4 = new WPI_TalonSRX(6);
 
-  Shooter shooter = new Shooter(modTalon1, modTalon2);
+  //Shooter shooter = new Shooter(modTalon1, modTalon2);
 
  // BallVisionCamera ballTracker;
   final String networkTableName = "photonvision";
@@ -217,6 +226,7 @@ public class Robot extends TimedRobot {
         modTalon1.set(0);
       }
     }
+    // mode 3 = Romulus
     if (mode == 3) {
       theTank.drive(-lStick.getY(), rStick.getY());
 
@@ -226,7 +236,7 @@ public class Robot extends TimedRobot {
       //if (xCont.getAButtonPressed()) {
       //  spinnyThingSpinningQuestionMark = !spinnyThingSpinningQuestionMark;
       //  if (spinnyThingSpinningQuestionMark) {
-      //    modTalon3.set(1.0);
+      //    (1.0);
       //  } else if (!spinnyThingSpinningQuestionMark) {
       //    modTalon3.set(0.0);
       //  }
@@ -239,6 +249,12 @@ public class Robot extends TimedRobot {
         modTalon3.set(0.0);
       }
 
+      if (xCont.getYButtonPressed()) {
+        modTalon3.set(1.0);
+      } else if (xCont.getYButtonReleased()) {
+        modTalon3.set(0.0);
+      }
+
       //Indexer and Shooter (Talon 4,2 resp.)
       if (xCont.getBButtonPressed()) {
         modTalon4.set(1.0);
@@ -247,6 +263,7 @@ public class Robot extends TimedRobot {
         modTalon4.set(0.0);
         modTalon2.set(0.0);
       }
+
       //Shooter (Talon 2)
       //if (xCont.getYButtonPressed()) {
         //modTalon2.set(-1.0);
@@ -260,6 +277,7 @@ public class Robot extends TimedRobot {
       } else if (xCont.getRawButtonReleased(6)) {
         modTalon1.set(0.0);
       }
+
       
       //Intake out
       if(xCont.getRawButtonPressed(5)) {
@@ -376,8 +394,7 @@ public class Robot extends TimedRobot {
       
 
     //System.out.println(leftModularEncoder.getDistance());
-
-    // Smartdashboard Values
+    
 
     try {
       // SmartDashboard.putNumber("Agitator Current", CAN[4].getOutputCurrent());
